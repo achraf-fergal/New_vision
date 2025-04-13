@@ -57,9 +57,9 @@ class LaureatController extends Controller
     public function GetMyPostes()
     {
         // $postes= souvenir::where('laureat_id', auth()->user()->id)->first();
-        $postes= souvenir::where('laureat_id', auth()->user()->id)->get();
+        $postes = souvenir::where('laureat_id', auth()->user()->id)->get();
         return Inertia::render('Laureat/UserPostes', [
-            'Postes'=>$postes,
+            'Postes' => $postes,
             'Laureat_Activity' => LaureatActivity::all(),
         ]);
     }
@@ -150,19 +150,54 @@ class LaureatController extends Controller
         return Redirect()->back()->with('user', laureat::find($request->id));
     }
 
-    public function UpdatePassword(Request $request){
-        $laureat=laureat::find($request->id);
-        if(!Hash::check($request->current_password,$laureat->password)){
-            return Redirect()->back()->withErrors(['current_password'=>'Mot de passe actuel incorrect']);
+    public function UpdatePassword(Request $request)
+    {
+        $laureat = laureat::find($request->id);
+        if (!Hash::check($request->current_password, $laureat->password)) {
+            return Redirect()->back()->withErrors(['current_password' => 'Mot de passe actuel incorrect']);
         }
-        if(Hash::check($request->password , $laureat->password)){
-            return Redirect()->back()->withErrors(['CheckPassword'=>'Saisir un mot de passe différent a votre ancien mot de passe']);
+        if (Hash::check($request->password, $laureat->password)) {
+            return Redirect()->back()->withErrors(['CheckPassword' => 'Saisir un mot de passe différent a votre ancien mot de passe']);
         }
         $request->validate([
             'password' => ['required', Rules\Password::defaults()],
-            'password_confirmation'=> 'required|same:password'
+            'password_confirmation' => 'required|same:password'
         ]);
-        $laureat->password=Hash::make($request->password);
+        $laureat->password = Hash::make($request->password);
         $laureat->update();
+    }
+
+    public function Search()
+    {
+
+        // $laureat = laureat::where('nom', 'LIKE', "%$search%")
+        //     ->orWhere('prenom', 'LIKE', "%$search%")
+        //     ->orWhere('email', 'LIKE', "%$search%")
+        //     ->get();
+
+
+        return Inertia::render('Laureat/Search', [
+            'Laureat_Activity' => LaureatActivity::all(),
+        ]);
+    }
+
+
+    public function GetPosteSearched(Request $request)
+    {
+        $Postes = souvenir::with('laureat')->where(
+            'content',
+            'LIKE',
+            '%' . $request->search . '%'
+        )->get();
+
+        $laureat = laureat::where('nom', 'LIKE', "%$request->search%")
+            ->orWhere('prenom', 'LIKE', "%$request->search%")
+            ->orWhere('email', 'LIKE', "%$request->search%")
+            ->get();
+
+
+        if ($request->wantsJson()) {
+            return response()->json($Postes);
+        }
     }
 }

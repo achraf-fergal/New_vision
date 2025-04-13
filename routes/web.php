@@ -13,8 +13,11 @@ use App\Models\Souvenirmongo;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+
+use function Laravel\Prompts\search;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -37,6 +40,7 @@ Route::middleware('auth')->group(function () {
     Route::get('Postes/bookmarked', [SouvenirController::class, 'getBookmarkedPosts'])->name('poste.bookmarked');
     Route::get('Laureat/Profile',[LaureatController::class, 'GetProfileInfo'])->name('laureat.profile');
     Route::get('Laureat/Postes',[LaureatController::class, 'GetMyPostes'])->name('laureat.postes');
+    Route::get('Search',[LaureatController::class, 'Search'])->name('laureat.search');
 
 });
 

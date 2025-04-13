@@ -4,8 +4,9 @@ import UserInfoCard from "./Composents/UserCard";
 import PostFeed from "./Composents/Postes";
 import { useEffect } from "react";
 import CreatePostDialog from "./Composents/CreatePoste";
+import SearchResults from "./Search";
 
-function Index({ User, Postes, isScrolled, createPostOpen, setCreatePostOpen, Comments_Count }) {
+function Index({ User, Postes, isScrolled, createPostOpen, setCreatePostOpen, searchQuery, searchOpen ,setSearchOpen }) {
     // const { url } = usePage();
 
     useEffect(() => {
@@ -42,6 +43,7 @@ function Index({ User, Postes, isScrolled, createPostOpen, setCreatePostOpen, Co
                         </>
                     )
                 }
+
             </div>
 
 

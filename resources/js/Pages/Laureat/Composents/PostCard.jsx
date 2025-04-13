@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Heart, MessageSquare, Share2, MoreVertical, Bookmark, User, Calendar, ChevronDown, ChevronUp } from "lucide-react";
+import { Heart, MessageSquare, Share2, MoreVertical, Bookmark, User, Calendar, ChevronDown, ChevronUp, BookmarkPlus } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Link, useForm, usePage } from "@inertiajs/react";
 import axios from "axios";
@@ -296,7 +296,7 @@ const PostCard = ({ Poste }) => {
                     className={`inline-flex items-center justify-center rounded-full p-2 transition-colors ${isBookmarked ? 'text-blue-600 hover:bg-blue-50' : 'text-gray-500 hover:bg-gray-50'}`}
                     onClick={handleBookmark}
                 >
-                    <Bookmark
+                    <BookmarkPlus
                         className={`h-5 w-5 ${isBookmarked ? "fill-blue-600" : ""}`}
                     />
                 </button>

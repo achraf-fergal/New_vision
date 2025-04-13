@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Home, Bookmark, Users, Settings, TrendingUp, Tag, Filter, Bell, LogOut, PlusCircle, Search, Sun, Moon, ChevronDown, ImageUp, UserPen } from "lucide-react";
-import { Head, Link, usePage } from "@inertiajs/react";
+import { Head, Link, router, useForm, usePage } from "@inertiajs/react";
+
 import TextInput from "@/Components/TextInput";
 
 function Dashboard({ children, title }) {
@@ -8,8 +9,10 @@ function Dashboard({ children, title }) {
     const [darkMode, setDarkMode] = useState(false);
     const [createPostOpen, setCreatePostOpen] = useState(false);
     const [dropdownOpen, setDropdownOpen] = useState(false);
+    const [search, setSearch] = useState('')
     const { auth } = usePage().props;
     const dropdownRef = useRef(null);
+
 
     useEffect(() => {
         const scrollableDiv = document.querySelector("main");
@@ -54,6 +57,13 @@ function Dashboard({ children, title }) {
         "Business", "Health", "Science",
         "Travel", "Food", "Music"
     ];
+
+    useEffect(() => {
+        if (!search) {
+            setSearch('')
+            router.visit(route('dashboard'));
+        }
+    }, [search])
 
     return (
         <>
@@ -180,12 +190,21 @@ function Dashboard({ children, title }) {
                             : 'bg-transparent h-20 '
                             }`}
                     >
-                        <div className="flex-1 max-w-2xl relative ">
+                        <div className="flex-1 max-w-2xl relative">
                             <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500' />
                             <TextInput
                                 type="text"
                                 placeholder="Search..."
-                                className={`w-full pl-10 pr-4 py-2 rounded-xl border transition-colors duration-300 placeholder:text-[#6B6B6B]  text-sm  text-gray-900  ${isScrolled && 'shadow-sm'}`}
+                                className="w-full pl-10 pr-4 py-2 rounded-xl border..."
+                                value={search}
+                                onChange={(e) => {
+                                    setSearch(e.target.value);
+
+                                    router.visit(route('laureat.search', { q: e.target.value }), {
+                                        preserveState: true,
+                                        only: ['Postes', 'Users']
+                                    });
+                                }}
                             />
                         </div>
 
@@ -253,14 +272,6 @@ function Dashboard({ children, title }) {
                                                 Dark Mode
                                             </div>
                                         </button>
-
-                                        <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setDropdownOpen(false)} >
-                                            <div className="flex items-center">
-                                                <Settings className="mr-2 h-4 w-4" />
-                                                Settings
-                                            </div>
-                                        </button>
-
                                         <div className="h-px bg-gray-200 my-1"></div>
 
                                         <Link
@@ -280,8 +291,9 @@ function Dashboard({ children, title }) {
                         </div>
                     </div>
 
+
                     <main className="pt-20 p-6 h-screen overflow-y-auto">
-                        {React.cloneElement(children, { isScrolled, createPostOpen, setCreatePostOpen })}
+                        {React.cloneElement(children, { isScrolled, createPostOpen, setCreatePostOpen, search })}
                     </main>
                 </div>
             </div>
