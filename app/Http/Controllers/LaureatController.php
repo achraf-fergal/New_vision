@@ -182,22 +182,43 @@ class LaureatController extends Controller
     }
 
 
-    public function GetPosteSearched(Request $request)
-    {
-        $Postes = souvenir::with('laureat')->where(
-            'content',
-            'LIKE',
-            '%' . $request->search . '%'
-        )->get();
 
-        $laureat = laureat::where('nom', 'LIKE', "%$request->search%")
-            ->orWhere('prenom', 'LIKE', "%$request->search%")
-            ->orWhere('email', 'LIKE', "%$request->search%")
+    public function getCombinedSearch(Request $request)
+    {
+
+        $search = $request->search;
+        $limit = $request->input('limit', 20);
+
+
+        if (empty($search)) {
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'posts' => [],
+                    'laureats' => []
+                ]);
+            }
+        }
+
+
+        $laureats = Laureat::where('nom', 'LIKE', "%{$search}%")
+            ->orWhere('prenom', 'LIKE', "%{$search}%")
+            ->orWhere('email', 'LIKE', "%{$search}%")
+            ->select('id', 'nom', 'prenom', 'email', 'imageSRC', 'fonction')
+            ->limit($limit)
             ->get();
 
+        $posts = souvenir::where('content', 'LIKE', "%{$search}%")
+            ->with('laureat')
+            ->select('id', 'content', 'laureat_id', 'created_at', 'likes_count', 'comments_count')
+            ->limit($limit)
+            ->get();
 
         if ($request->wantsJson()) {
-            return response()->json($Postes);
+            return response()->json([
+                'posts' => $posts,
+                'laureats' => $laureats
+            ]);
         }
     }
 }

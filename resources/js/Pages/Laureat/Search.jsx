@@ -83,72 +83,92 @@
 
 // SearchResults.layout = page => <Dashboard children={page} />;
 // export default SearchResults;
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Search, User } from "lucide-react";
 import Dashboard from "@/Layouts/DashboardLayout";
 import { useForm } from "@inertiajs/react";
 import SearchPoste from "./Composents/SearchPoste";
 
-const SearchResults = ({ search, Postes, Laureats }) => {
+const SearchResults = ({ search }) => {
     const { data, setData, processing, post } = useForm({
-        posts: Postes || [],
-        Laureats: Laureats || []
+        posts: [],
+        Laureats: []
     });
+    const [loading, setLoading] = useState(false);
+
+
+    const searchTimeoutRef = useRef(null);
+
+    const performSearch = async (search) => {
+        if (!search.trim()) {
+            setData({ posts: [], laureats: [] });
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const response = await axios.post(route('laureat.search.combined', {
+                search: search,
+                limit: 10
+            }));
+
+            setData({
+                posts: response.data.posts || [],
+                Laureats: response.data.laureats || []
+            });
+        } catch (error) {
+            console.error('Search error:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const [filters, setfilters] = useState("posts");
-    const [ResultsPostes, setResultsPostes] = useState([]);
-    const [ResultsLaureats, setResultsLaureats] = useState([]);
-    const [loading, setLoading] = useState(false);
+
 
     const filtersType = [
         { id: "posts", label: "Posts" },
         { id: "authors", label: "Authors" },
     ];
 
-    useEffect(() => {
-        if (filters === "posts") {
-            setResultsPostes([...data.posts]);
-        } else if (filters === "authors") {
-            setResultsLaureats([...data.Laureats]);
-        }
-    }, [filters, data]);
-
-    const UserSearchResult = ({ user }) => (
+    const UserSearchResult = ({ laureat }) => (
         <div className="p-4 hover:bg-gray-50 border transition-colors rounded-lg mb-2 cursor-pointer">
             <div className="flex items-center gap-3">
-                {user.imageSRC ? (
-                    <img src={'/storage/' + user.imageSRC} alt={user.nom} className="w-11 h-11 rounded-full" />
+                {laureat.imageSRC ? (
+                    <img src={'/storage/' + laureat.imageSRC} alt={laureat.nom} className="w-11 h-11 rounded-full" />
                 ) : (
                     <div className="w-11 h-11 rounded-full bg-blue-500 flex items-center justify-center text-white font-medium">
-                        {user.nom[0] + user.prenom[0]}
+                        {laureat.nom[0] + laureat.prenom[0]}
                     </div>
                 )}
                 <div>
-                    <h3 className="text-base font-semibold text-gray-900">{user.nom} {user.prenom}</h3>
-                    <p className="text-sm text-gray-500">{user.fonction || 'Laureat'}</p>
-                    {user.etablissement && <p className="text-xs text-gray-400">{user.etablissement}</p>}
+                    <h3 className="text-base font-semibold text-gray-900">{laureat.nom} {laureat.prenom}</h3>
+                    <p className="text-sm text-gray-500">{laureat.fonction || 'Laureat'}</p>
+                    {laureat.etablissement && <p className="text-xs text-gray-400">{laureat.etablissement}</p>}
                 </div>
             </div>
         </div>
     );
 
-    const GetPostes = async () => {
-        setLoading(true);
-        try {
-            const res = await axios.post(route('laureat.search.getpostes', { search: search }))
-            setResultsPostes(res.data);
-            setLoading(false);
-        } catch (error) {
-            console.log(error)
-            setLoading(false);
-        }
-    }
 
     useEffect(() => {
-        GetPostes();
-    }, [search]);
+        // Clear previous timeout
+        if (searchTimeoutRef.current) {
+            clearTimeout(searchTimeoutRef.current);
+        }
 
-    console.log(ResultsPostes);
+        // Set new timeout
+        searchTimeoutRef.current = setTimeout(() => {
+            performSearch(search);
+        }, 400); // Wait 400ms after typing stops
+
+        // Cleanup on unmount
+        return () => {
+            if (searchTimeoutRef.current) {
+                clearTimeout(searchTimeoutRef.current);
+            }
+        };
+    }, [search]);
 
     return (
         <>
@@ -158,7 +178,7 @@ const SearchResults = ({ search, Postes, Laureats }) => {
                         {filtersType.map(filter => (
                             <button
                                 key={filter.id}
-                                onClick={() => setActiveFilter(filter.id)}
+                                onClick={() => setfilters(filter.id)}
                                 className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap ${filters === filter.id
                                     ? 'bg-blue-100 text-blue-800'
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -178,17 +198,15 @@ const SearchResults = ({ search, Postes, Laureats }) => {
                     </div>)
                     :
                     (
-                        (filters === 'posts') && ResultsPostes.length > 0 ?
-                            (ResultsPostes.map((elem, index) => {
-                                <SearchPoste key={index} poste={elem} />
-                            })
-                            ) :
-                            (filters === 'authors') && ResultsLaureats.length > 0 ?
-                                (ResultsLaureats.map((elem, index) => {
-                                    <UserSearchResult key={index} laureat={elem} />
-                                })
+                        filters === 'posts' ? (
+                            data.posts.length > 0 ?
+                                (
+                                    data.posts.map((elem, index) =>
+                                        <SearchPoste key={index} poste={elem} />
+                                    )
                                 )
-                                : (
+                                :
+                                (
                                     <div className="flex flex-col items-center justify-center py-16 mt-16">
                                         <div className="rounded-full p-4 bg-gray-100">
                                             <Search className="h-10 w-10 text-gray-400" />
@@ -197,6 +215,26 @@ const SearchResults = ({ search, Postes, Laureats }) => {
                                         <p className="mt-1 text-gray-500">Try adjusting your search or filter to find what you're looking for.</p>
                                     </div>
                                 )
+                        )
+                            : filters === 'authors' ? (
+                                data.Laureats.length > 0 ?
+                                    (
+                                        (data.Laureats.map((elem, index) =>
+                                            <UserSearchResult key={index} laureat={elem} />
+                                        )
+                                        )
+                                    )
+                                    : (
+                                        <div className="flex flex-col items-center justify-center py-16 mt-16">
+                                            <div className="rounded-full p-4 bg-gray-100">
+                                                <Search className="h-10 w-10 text-gray-400" />
+                                            </div>
+                                            <h3 className="mt-4 text-lg font-medium text-gray-900">No results found</h3>
+                                            <p className="mt-1 text-gray-500">Try adjusting your search or filter to find what you're looking for.</p>
+                                        </div>
+                                    )
+                            )
+                                : null
                     )
                 }
 

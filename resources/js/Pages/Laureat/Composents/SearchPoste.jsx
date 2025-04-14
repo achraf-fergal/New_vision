@@ -7,6 +7,8 @@ import { formatDistanceToNow } from "date-fns";
 const SearchPoste = ({ poste }) => {
     const { auth } = usePage().props;
 
+    console.log(poste)
+
     const { data, setData, post, get, reset, processing } = useForm({
         ...poste,
         LaureatId: auth.user.id,
@@ -14,9 +16,7 @@ const SearchPoste = ({ poste }) => {
     });
     const { Laureat_Activity } = usePage().props;
 
-    const [loading, setLoading] = useState(false);
-    const [activeFilter, setActiveFilter] = useState("all");
-    const [showFilters, setShowFilters] = useState(false);
+
     const [isBookmarked, setIsBookmarked] = useState(false);
     const [isLiked, setIsLiked] = useState(false);
 
@@ -59,23 +59,6 @@ const SearchPoste = ({ poste }) => {
     }, [Laureat_Activity]);
 
 
-    const filterTypes = [
-        { id: "all", label: "All Results" },
-        { id: "posts", label: "Posts" },
-        { id: "authors", label: "Authors" },
-        { id: "categories", label: "Categories" },
-        { id: "tags", label: "Tags" }
-    ];
-
-    // Handle filtering logic
-    const filteredResults = () => {
-        if (activeFilter === "all") return results;
-        if (activeFilter === "posts") return results;
-        // Other filter implementations would go here
-        return results;
-    };
-
-
     const tags = ['dev', 'info', 'design'];
 
 
@@ -100,7 +83,7 @@ const SearchPoste = ({ poste }) => {
                             <span className="text-gray-500 text-xs flex items-center">
                                 <Calendar className="inline h-3 w-3 mr-1" />
                                 {
-                                    formatDistanceToNow(new Date(poste.dateSouvenir), { addSuffix: true, })
+                                    formatDistanceToNow(new Date(poste.created_at), { addSuffix: true, })
                                 }
                             </span>
                         </div>
@@ -152,8 +135,8 @@ const SearchPoste = ({ poste }) => {
                     </div>
 
                     <div className="flex flex-wrap items-end  gap-2 mb-3  ">
-                        <span className="text-xs text-gray-500 flex items-center">
-                            <ThumbsUp className="inline h-3 w-3 mr-1" />
+                        <span className={`text-xs flex items-center  `}>
+                            <ThumbsUp className={` inline h-3 w-3 mr-1 ${isLiked ? 'fill-red-600 text-red-600 ' :''} `} />
                             {poste.likes_count}
                         </span>
                         <span className="text-xs text-gray-500 flex items-center">

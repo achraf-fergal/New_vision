@@ -12,6 +12,7 @@ function Dashboard({ children, title }) {
     const [search, setSearch] = useState('')
     const { auth } = usePage().props;
     const dropdownRef = useRef(null);
+    const searchTimeout = useRef(null);
 
 
     useEffect(() => {
@@ -199,11 +200,14 @@ function Dashboard({ children, title }) {
                                 value={search}
                                 onChange={(e) => {
                                     setSearch(e.target.value);
-
-                                    router.visit(route('laureat.search', { q: e.target.value }), {
-                                        preserveState: true,
-                                        only: ['Postes', 'Users']
-                                    });
+                                    // Use debounce to avoid too many requests
+                                    clearTimeout(searchTimeout.current);
+                                    searchTimeout.current = setTimeout(() => {
+                                        router.visit(route('laureat.search', { q: e.target.value }), {
+                                            preserveState: true,
+                                            only: ['Postes', 'Users']
+                                        });
+                                    }, 700); // Wait 500ms after typing stopsx
                                 }}
                             />
                         </div>

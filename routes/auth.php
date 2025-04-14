@@ -87,7 +87,7 @@ Route::middleware('auth')->group(function () {
     Route::post('profile_update',[LaureatController::class, 'UpdateProfile'])->name('laureat.profile.update');
     Route::post('password_update',[LaureatController::class, 'UpdatePassword'])->name('laureat.password.update');
     Route::post('Poste/{id}/ShareCount',[LaureatController::class, 'UpdateShareCount'])->name('laureat.ShareCount');
-    Route::post('Poste/Search',[LaureatController::class, 'GetPosteSearched'])->name('laureat.search.getpostes');
+    Route::post('Poste/Search',[LaureatController::class, 'getCombinedSearch'])->name('laureat.search.combined');
 
 
 
