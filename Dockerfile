@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
     libssl-dev \
     libcurl4-openssl-dev \
     && docker-php-ext-install zip \
-    && pecl install mongodb \
+    && pecl install mongodb-1.20.1 \
     && docker-php-ext-enable mongodb \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
