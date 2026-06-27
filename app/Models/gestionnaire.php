@@ -8,20 +8,24 @@ use Illuminate\Notifications\Notifiable;
 
 class Gestionnaire extends Authenticatable
 {
-    use Notifiable;
     use HasFactory;
+    use Notifiable;
 
     protected $fillable = [
         'matricule',
         'nom',
+        'telephone',
         'prenom',
         'email',
+        'CIN',
         'password',
-        'imageSRC'
+        'imageSRC',
+        'role',
+        'valide',
     ];
 
     protected $hidden = [
         'password',
-        'maticule'
+        'matricule',
     ];
 }

@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react';
-import { User, Camera, Save, X, Edit2, Edit } from 'lucide-react';
+import { User, Edit, X, Save } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import { CgDanger } from 'react-icons/cg';
 import { useForm } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
+import SelectInput from '@/Components/SelectInput';
 
-function InformationsPersonnelles({ user }) {
-
+const InformationsPersonnelles = ({ user }) => {
+    const { t, i18n } = useTranslation();
     const { data, setData, post, errors, processing, reset } = useForm({
         id: user.id,
         nom: user.nom || '',
@@ -21,347 +23,333 @@ function InformationsPersonnelles({ user }) {
         etablissement: user.etablissement || '',
         employeur: user.employeur || '',
         fonction: user.fonction || '',
-        password: '',
-        password_confirmation: '',
-    })
+    });
 
-    const [isEdit, setIsEdit] = useState(false)
-    const [detecteChange, setdetecteChange] = useState(false)
-
-    console.log(user);
-
-    const [Errors, setErrors] = useState({})
+    const [isEdit, setIsEdit] = useState(false);
+    const [hasChanges, setHasChanges] = useState(false);
 
     useEffect(() => {
-        setErrors({ ...errors })
-    }, [errors])
-
-    useEffect(() => {
-        setdetecteChange(
-            (data.nom !== user.nom) ||
-            (data.prenom !== user.prenom) ||
-            (data.email !== user.email) ||
-            (data.telephone !== user.telephone) ||
-            (data.filiere !== user.filiere) ||
-            (data.bio !== (user.bio ? user.bio : '')) ||
-            (data.promotion !== user.promotion) ||
-            (data.etablissement !== user.etablissement) ||
-            (data.employeur !== (user.employeur ? user.employeur : '')) ||
-            (data.fonction !== (user.fonction ? user.fonction : ''))
-        )
-    }, [data])
-
+        setHasChanges(
+            data.nom !== user.nom ||
+            data.prenom !== user.prenom ||
+            data.email !== user.email ||
+            data.telephone !== user.telephone ||
+            data.filiere !== user.filiere ||
+            data.bio !== (user.bio || '') ||
+            data.promotion !== user.promotion ||
+            data.etablissement !== user.etablissement ||
+            data.employeur !== (user.employeur || '') ||
+            data.fonction !== (user.fonction || '')
+        );
+    }, [data, user]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setData({
-            ...data,
-            [name]: value
-        })
-    }
+        setData(name, value);
+    };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
-        if (detecteChange) {
+        if (hasChanges) {
             post(route("laureat.profile.update"), {
                 preserveScroll: true,
                 onSuccess: () => {
-                    toast.success('Votre Informations Personnelles a été mis à jour avec Succès');
-                    setIsEdit(false)
-
+                    toast.success(t('personal_info.success_update'));
+                    setIsEdit(false);
                 }
             });
-        }
-        else {
+        } else {
             setIsEdit(false);
         }
-    }
+    };
 
-
-    const handleEdit = () => {
+    const toggleEdit = () => {
         if (!isEdit) {
-            setIsEdit(true)
+            setIsEdit(true);
+        } else if (hasChanges) {
+            if (confirm(t('personal_info.confirm_cancel'))) {
+                reset();
+                setIsEdit(false);
+            }
+        } else {
+            setIsEdit(false);
         }
-
-        if (isEdit)
-            if (detecteChange) {
-                confirm('Are you sure you want cancel your changes?') && setData({ ...user, fonction: user.fonction ? user.fonction : '', employeur: user.employeur ? user.employeur : '' }) && setIsEdit(false)
-            }
-            else {
-                setIsEdit(false)
-            }
-    }
-
+    };
 
 
     return (
-        <div className="mb-6 bg-white shadow sm:rounded-lg sm:p-8">
+        <div
+            className="bg-white shadow sm:rounded-lg p-6 mb-6"
+            dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}
+        >
+            <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold">
+                    {t('personal_info.title')}
+                </h2>
 
-
-            <div className='flex flex-row justify-between'>
-                <h2 className="text-xl font-semibold mb-6">Informations Personnelles : </h2>
-
-                {
-                    !isEdit &&
-                    <div className='flex flex-row gap-2'>
-                        <button
-                            onClick={handleEdit}
-                            className=" px-6 py-4 bg-black text-white rounded-lg hover:opacity-90 flex items-center gap-2 h-2/3 w-full ">
-                            <Edit size={20} />
-                            Modifier Votre Information
-                        </button>
-                    </div>
-                }
-                {
-                    isEdit &&
-                    <div className='flex flex-row gap-2'>
+                {!isEdit ? (
+                    <button
+                        onClick={toggleEdit}
+                        className={`flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors ${i18n.language === 'ar' ? 'flex-row-reverse' : ''
+                            }`}
+                    >
+                        <Edit size={18} />
+                        {t('personal_info.edit_button')}
+                    </button>
+                ) : (
+                    <div className={`flex gap-2 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
                         <button
                             onClick={handleSubmit}
-                            className="px-6 py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 h-2/3 w-full ">
-                            <Edit size={20} />
-                            Enregistrer
+                            disabled={!hasChanges}
+                            className={`flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors ${!hasChanges ? 'opacity-50 cursor-not-allowed' : ''
+                                } ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}
+                        >
+                            <Save size={18} />
+                            {t('personal_info.save_button')}
                         </button>
                         <button
-                            onClick={handleEdit}
-                            className=" px-6 py-4 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-2 h-2/3 w-full ">
-                            <Edit size={20} />
-                            Annuler
+                            onClick={toggleEdit}
+                            className={`flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors ${i18n.language === 'ar' ? 'flex-row-reverse' : ''
+                                }`}
+                        >
+                            <X size={18} />
+                            {t('personal_info.cancel_button')}
                         </button>
                     </div>
-                }
-
+                )}
             </div>
 
-            <div className='my-4' >
-                <InputLabel htmlFor="bio" value="bio" />
+            <div className="mb-6">
+                <InputLabel htmlFor="bio" value={t('personal_info.fields.bio')} />
                 <TextInput
                     id="bio"
                     name="bio"
-                    placeholder="Entrer votre bio"
                     value={data.bio}
                     className="mt-1 block w-full"
                     onChange={handleChange}
                     disabled={!isEdit}
                     maxLength={155}
+                    placeholder={t('personal_info.fields.bio')}
                 />
-                {
-                    data.bio.length >= 155 && <p className='text-red-600'>Le bio ne doit pas dépasser 155 caractères</p>
-                }
-                {
-                    Errors.nom && (
-                        <div className="mt-2" >
-                            <CgDanger className="text-base text-red-600 inline " />
-                            <InputError message={Errors.nom} className="mt-2" />
-                        </div>
-                    )
-                }
+                {data.bio?.length >= 155 && (
+                    <p className="mt-1 text-sm text-red-600">
+                        {t('personal_info.fields.bio_limit')}
+                    </p>
+                )}
+                {errors.bio && (
+                    <div className="mt-1 flex items-center gap-1 text-sm text-red-600">
+                        <CgDanger />
+                        <InputError message={errors.bio} />
+                    </div>
+                )}
             </div>
-            <div className="grid md:grid-cols-2 gap-6">
 
-
+            <div className="grid md:grid-cols-2 gap-6 mb-8">
                 <div>
-                    <InputLabel htmlFor="nom" value="Nom" />
+                    <InputLabel htmlFor="nom" value={t('personal_info.fields.first_name')} />
                     <TextInput
                         id="nom"
                         name="nom"
-                        placeholder="Entrer votre nom"
                         value={data.nom}
                         className="mt-1 block w-full"
                         onChange={handleChange}
                         disabled={!isEdit}
+                        placeholder={t('personal_info.fields.first_name')}
                     />
-                    {
-                        Errors.nom && (
-                            <div className="mt-2" >
-                                <CgDanger className="text-base text-red-600 inline " />
-                                <InputError message={Errors.nom} className="mt-2" />
-                            </div>
-                        )
-                    }
+                    {errors.nom && (
+                        <div className="mt-1 flex items-center gap-1 text-sm text-red-600">
+                            <CgDanger />
+                            <InputError message={errors.nom} />
+                        </div>
+                    )}
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="prenom" value="Prenom" />
+                    <InputLabel htmlFor="prenom" value={t('personal_info.fields.last_name')} />
                     <TextInput
                         id="prenom"
                         name="prenom"
-                        placeholder="Entrer votre prenom"
                         value={data.prenom}
                         className="mt-1 block w-full"
                         onChange={handleChange}
                         disabled={!isEdit}
-
+                        placeholder={t('personal_info.fields.last_name')}
                     />
-                    {
-                        Errors.prenom && (
-                            <div className="mt-2" >
-                                <CgDanger className="text-base text-red-600 inline " />
-                                <InputError message={Errors.prenom} className="mt-2" />
-                            </div>
-                        )
-                    }
+                    {errors.prenom && (
+                        <div className="mt-1 flex items-center gap-1 text-sm text-red-600">
+                            <CgDanger />
+                            <InputError message={errors.prenom} />
+                        </div>
+                    )}
                 </div>
+
                 <div>
-                    <InputLabel htmlFor="email" value="Email" />
+                    <InputLabel htmlFor="email" value={t('personal_info.fields.email')} />
                     <TextInput
                         id="email"
                         name="email"
-                        placeholder="Entrer votre email"
+                        type="email"
                         value={data.email}
                         className="mt-1 block w-full"
                         onChange={handleChange}
                         disabled={!isEdit}
+                        placeholder={t('personal_info.fields.email')}
                     />
-                    {
-                        (Errors.EmailExists || Errors.email) && (
-                            <div className="mt-2" >
-                                <CgDanger className="text-base text-red-600 inline " />
-                                <InputError message={Errors.EmailExists} className="mt-2" />
-                                <InputError message={Errors.email} className="mt-2" />
-                            </div>
-                        )
-                    }
+                    {(errors.email || errors.EmailExists) && (
+                        <div className="mt-1 flex items-center gap-1 text-sm text-red-600">
+                            <CgDanger />
+                            <InputError message={errors.email} />
+                            <InputError message={errors.EmailExists} />
+                        </div>
+                    )}
                 </div>
+
                 <div>
-                    <InputLabel htmlFor="telephone" value="Telephone" />
+                    <InputLabel htmlFor="telephone" value={t('personal_info.fields.phone')} />
                     <TextInput
                         id="telephone"
                         name="telephone"
-                        placeholder="Entrer votre telephone"
                         value={data.telephone}
                         className="mt-1 block w-full"
                         onChange={handleChange}
                         disabled={!isEdit}
-
+                        placeholder={t('personal_info.fields.phone')}
                     />
-                    {
-                        (Errors.telephone) && (
-                            <div className="mt-2" >
-                                <CgDanger className="text-base text-red-600 inline " />
-                                <InputError message={Errors.telephone} className="mt-2" />
-                            </div>
-                        )
-                    }
+                    {errors.telephone && (
+                        <div className="mt-1 flex items-center gap-1 text-sm text-red-600">
+                            <CgDanger />
+                            <InputError message={errors.telephone} />
+                        </div>
+                    )}
                 </div>
             </div>
 
-            <h2 className="text-xl font-semibold mb-6 mt-10">Informations Academiques : </h2>
-            <div className="grid md:grid-cols-2 gap-6">
-
+            <h3 className="text-lg font-semibold mb-4">
+                {t('personal_info.sections.academic')}
+            </h3>
+            <div className="grid md:grid-cols-2 gap-6 mb-8">
                 <div>
-                    <InputLabel htmlFor="etablissement" value="Etablissement" />
+                    <InputLabel htmlFor="etablissement" value={t('personal_info.fields.institution')} />
                     <TextInput
                         id="etablissement"
                         name="etablissement"
-                        placeholder="Entrer votre etablissement"
                         value={data.etablissement}
                         className="mt-1 block w-full"
                         onChange={handleChange}
                         disabled={!isEdit}
-
+                        placeholder={t('personal_info.fields.institution')}
                     />
-                    {
-                        (Errors.etablissement) && (
-                            <div className="mt-2" >
-                                <CgDanger className="text-base text-red-600 inline " />
-                                <InputError message={Errors.etablissement} className="mt-2" />
-                            </div>
-                        )
-                    }
+                    {errors.etablissement && (
+                        <div className="mt-1 flex items-center gap-1 text-sm text-red-600">
+                            <CgDanger />
+                            <InputError message={errors.etablissement} />
+                        </div>
+                    )}
                 </div>
+
                 <div>
-                    <InputLabel htmlFor="filiere" value="Filiere" />
-                    <TextInput
+                    <InputLabel htmlFor="filiere" value={t('personal_info.fields.field')} />
+                    <SelectInput
                         id="filiere"
                         name="filiere"
-                        placeholder="Entrer votre filiere"
                         value={data.filiere}
-                        className="mt-1 block w-full"
                         onChange={handleChange}
+                        className="mt-1 block w-full"
                         disabled={!isEdit}
-
-                    />
-                    {
-                        (Errors.filiere) && (
-                            <div className="mt-2" >
-                                <CgDanger className="text-base text-red-600 inline " />
-                                <InputError message={Errors.filiere} className="mt-2" />
-                            </div>
-                        )
-                    }
+                    >
+                        <option value="" disabled>{t('personal_info.select_placeholder')}</option>
+                        <option value="developpement_digital">{t('branches.developpement_digital')}</option>
+                        <option value="reseaux_informatique">{t('branches.reseaux_informatique')}</option>
+                        <option value="gestion_entreprise">{t('branches.gestion_entreprise')}</option>
+                        <option value="commerce_vente">{t('branches.commerce_vente')}</option>
+                        <option value="comptabilite">{t('branches.comptabilite')}</option>
+                        <option value="hotellerie_tourisme">{t('branches.hotellerie_tourisme')}</option>
+                        <option value="batiment_travaux_publics">{t('branches.batiment_travaux_publics')}</option>
+                        <option value="mecanique_auto">{t('branches.mecanique_auto')}</option>
+                        <option value="electricite_batiment">{t('branches.electricite_batiment')}</option>
+                        <option value="electronique_industrielle">{t('branches.electronique_industrielle')}</option>
+                        <option value="maintenance_industrielle">{t('branches.maintenance_industrielle')}</option>
+                        <option value="soudage_chaudronnerie">{t('branches.soudage_chaudronnerie')}</option>
+                        <option value="agriculture">{t('branches.agriculture')}</option>
+                        <option value="audiovisuel_multimedia">{t('branches.audiovisuel_multimedia')}</option>
+                        <option value="arts_graphiques_imprimerie">{t('branches.arts_graphiques_imprimerie')}</option>
+                        <option value="sante_social">{t('branches.sante_social')}</option>
+                        <option value="logistique_transport">{t('branches.logistique_transport')}</option>
+                    </SelectInput>
+                    {errors.filiere && (
+                        <div className="mt-1 flex items-center gap-1 text-sm text-red-600">
+                            <CgDanger />
+                            <InputError message={errors.filiere} />
+                        </div>
+                    )}
                 </div>
+
                 <div>
-                    <InputLabel htmlFor="promotion" value="Promotion" />
+                    <InputLabel htmlFor="promotion" value={t('personal_info.fields.promotion')} />
                     <TextInput
                         id="promotion"
                         name="promotion"
-                        placeholder="Entrer votre promotion"
                         value={data.promotion}
                         className="mt-1 block w-full"
                         onChange={handleChange}
                         disabled={!isEdit}
-
+                        placeholder={t('personal_info.fields.promotion')}
                     />
-                    {
-                        (Errors.promotion) && (
-                            <div className="mt-2" >
-                                <CgDanger className="text-base text-red-600 inline " />
-                                <InputError message={Errors.promotion} className="mt-2" />
-                            </div>
-                        )
-                    }
+                    {errors.promotion && (
+                        <div className="mt-1 flex items-center gap-1 text-sm text-red-600">
+                            <CgDanger />
+                            <InputError message={errors.promotion} />
+                        </div>
+                    )}
                 </div>
             </div>
-            <h2 className="text-xl font-semibold mb-6 mt-10">Informations Professionnelle : </h2>
-            <div className="grid md:grid-cols-2 gap-6">
 
+            <h3 className="text-lg font-semibold mb-4">
+                {t('personal_info.sections.professional')}
+            </h3>
+            <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                    <InputLabel htmlFor="employeur" value="Employeur" />
+                    <InputLabel htmlFor="employeur" value={t('personal_info.fields.employer')} />
                     <TextInput
                         id="employeur"
                         name="employeur"
-                        placeholder="Entrer votre employeur"
                         value={data.employeur}
                         className="mt-1 block w-full"
                         onChange={handleChange}
                         disabled={!isEdit}
-
+                        placeholder={t('personal_info.fields.employer')}
                     />
-                    {
-                        (Errors.employeur) && (
-                            <div className="mt-2" >
-                                <CgDanger className="text-base text-red-600 inline " />
-                                <InputError message={Errors.employeur} className="mt-2" />
-                            </div>
-                        )
-                    }
+                    {errors.employeur && (
+                        <div className="mt-1 flex items-center gap-1 text-sm text-red-600">
+                            <CgDanger />
+                            <InputError message={errors.employeur} />
+                        </div>
+                    )}
                 </div>
+
                 <div>
-                    <InputLabel htmlFor="fonction" value="Fonction" />
+                    <InputLabel htmlFor="fonction" value={t('personal_info.fields.position')} />
                     <TextInput
                         id="fonction"
                         name="fonction"
-                        placeholder="Entrer votre fonction"
                         value={data.fonction}
                         className="mt-1 block w-full"
                         onChange={handleChange}
                         disabled={!isEdit}
-
+                        placeholder={t('personal_info.fields.position')}
                     />
-                    {
-                        (Errors.fonction) && (
-                            <div className="mt-2" >
-                                <CgDanger className="text-base text-red-600 inline " />
-                                <InputError message={Errors.fonction} className="mt-2" />
-                            </div>
-                        )
-                    }
+                    {errors.fonction && (
+                        <div className="mt-1 flex items-center gap-1 text-sm text-red-600">
+                            <CgDanger />
+                            <InputError message={errors.fonction} />
+                        </div>
+                    )}
                 </div>
             </div>
-            <Toaster />
+
+            <Toaster position={i18n.language === 'ar' ? 'top-left' : 'top-right'} />
         </div>
-    )
-}
+    );
+};
 
 export default InformationsPersonnelles;
-

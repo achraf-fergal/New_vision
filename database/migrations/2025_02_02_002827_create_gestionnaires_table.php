@@ -15,9 +15,13 @@ return new class extends Migration
             $table->id();
             $table->integer('matricule')->unique();
             $table->string('email')->unique();
+            $table->string('telephone')->unique();
             $table->string('nom');
             $table->string('prenom');
+            $table->string('CIN')->unique();
+            $table->enum('role',['admin', 'superadmin']);
             $table->string('imageSRC')->nullable(true);
+            $table->boolean('valide')->default(false);
             $table->string('password');
             $table->timestamps();
         });

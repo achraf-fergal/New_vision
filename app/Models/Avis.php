@@ -8,8 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class Avis extends Model
 {
     use HasFactory;
-    public function Laureat()
+    public function User()
     {
-        return $this->belongsTo(Laureat::class);
+        return $this->belongsTo(User::class);
     }
 }

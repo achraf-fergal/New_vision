@@ -5,9 +5,12 @@ import { useForm, usePage, Link } from "@inertiajs/react";
 import axios from "axios";
 import CommentSection from "./Comments";
 import toast, { Toaster } from "react-hot-toast";
+import { useTranslation } from "react-i18next";
+import { ar, enUS, fr } from "date-fns/locale";
 
 const MyPostDetail = ({ Poste }) => {
     const { auth } = usePage().props;
+    const { t, i18n } = useTranslation();
     const { Laureat_Activity } = usePage().props;
     const { data, setData, post } = useForm({
         LaureatId: auth.user.id,
@@ -33,7 +36,10 @@ const MyPostDetail = ({ Poste }) => {
         sharePercentage: 0
     });
 
-    console.log(Poste)
+
+    useEffect(() => {
+        document.documentElement.dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
+    }, [i18n.language]);
 
     useEffect(() => {
         const total = likeCount + commentCount + savedCount + shareCount;
@@ -94,12 +100,6 @@ const MyPostDetail = ({ Poste }) => {
             await post(route('poste.save'), {
                 preserveScroll: true,
             });
-            // try {
-            //     const res = await axios.post(`/Poste/${Poste.id}/SaveCount`);
-            //     setSavedCount(res.data.saved_count || savedCount + 1);
-            // } catch (error) {
-            //     setSavedCount(savedCount + 1);
-            // }
         }
         else {
             post(route('poste.Unsave'), {
@@ -115,7 +115,7 @@ const MyPostDetail = ({ Poste }) => {
     };
 
     const handleDelete = async () => {
-        if (confirm('Are you sure you want to delete this post?')) {
+        if (confirm(t('confirm_delete_post'))) {
             await post(route('poste.delete'), {
                 onSuccess: () => {
                     window.location.href = route('dashboard');
@@ -141,18 +141,13 @@ const MyPostDetail = ({ Poste }) => {
     const copyPosteLink = async (id) => {
         const posteUrl = `${window.location.origin}/Poste/${id}`;
 
-
         await post(`/Poste/${id}/ShareCount`);
 
         navigator.clipboard.writeText(posteUrl)
             .then(() => {
-                toast.success('Poste link copied to clipboard!');
+                toast.success(t('link_copied'));
                 setDropdownOpen(false);
             });
-
-
-
-
     };
 
     const handleStats = () => {
@@ -172,24 +167,53 @@ const MyPostDetail = ({ Poste }) => {
         setShareCount(Poste.shares_count);
     }, [Poste]);
 
+    const [lang , setlang] = useState('');
+
+
+    useEffect(() => {
+        const fetchLang = async () => {
+            try {
+                const response = await axios.post('https://ws.detectlanguage.com/0.2/detect',
+                    { q: Poste.content },
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${import.meta.env.VITE_DETECTLANGUAGE_API_KEY}`,
+                        },
+                    }
+                );
+
+                const language = response.data.data.detections[0].language;
+                setlang(language);
+            } catch (error) {
+                setlang('und');
+            }
+        };
+
+        fetchLang();
+
+    }
+        , []);
+
+
+        // console.log(lang);
 
     const StatsPanel = () => (
-        <div className="space-y-3 mt-4">
+        <div className="space-y-3 mt-4" dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}>
             <div className="flex items-center gap-2 mb-3">
                 <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                     <BarChart2 className="h-5 w-5 text-blue-600" />
                 </div>
                 <div>
-                    <h3 className="font-medium text-gray-900">Post Statistics</h3>
-                    <p className="text-xs text-gray-600">Total: {postStats.totalInteractions} interactions</p>
+                    <h3 className="font-medium text-gray-900">{t('post_stats.title')}</h3>
+                    <p className="text-xs text-gray-600">{t('post_stats.total', { count: postStats.totalInteractions })}</p>
                 </div>
             </div>
 
             <div className="bg-white p-2.5 rounded-lg shadow-sm">
                 <div className="flex justify-between items-center mb-1">
                     <div className="flex items-center">
-                        <Heart className="h-4 w-4 text-red-500 mr-1" />
-                        <span className="text-sm font-medium">Likes</span>
+                        <Heart className={`h-4 w-4 text-red-500 ${i18n.language == 'ar' ? 'ml-1' : 'mr-1'}`} />
+                        <span className="text-sm font-medium">{t('post_stats.likes')}</span>
                     </div>
                     <span className="text-sm font-bold">{likeCount}</span>
                 </div>
@@ -202,8 +226,8 @@ const MyPostDetail = ({ Poste }) => {
             <div className="bg-white p-2.5 rounded-lg shadow-sm">
                 <div className="flex justify-between items-center mb-1">
                     <div className="flex items-center">
-                        <MessageSquare className="h-4 w-4 text-green-500 mr-1" />
-                        <span className="text-sm font-medium">Comments</span>
+                        <MessageSquare className={`h-4 w-4 text-green-500 ${i18n.language == 'ar' ? 'ml-1' : 'mr-1'} `} />
+                        <span className="text-sm font-medium">{t('post_stats.comments')}</span>
                     </div>
                     <span className="text-sm font-bold">{commentCount}</span>
                 </div>
@@ -216,8 +240,8 @@ const MyPostDetail = ({ Poste }) => {
             <div className="bg-white p-2.5 rounded-lg shadow-sm">
                 <div className="flex justify-between items-center mb-1">
                     <div className="flex items-center">
-                        <Bookmark className="h-4 w-4 text-blue-500 mr-1" />
-                        <span className="text-sm font-medium">Saves</span>
+                        <Bookmark className={`h-4 w-4 text-blue-500 ${i18n.language == 'ar' ? 'ml-1' : 'mr-1'} `} />
+                        <span className="text-sm font-medium">{t('post_stats.saves')}</span>
                     </div>
                     <span className="text-sm font-bold">{savedCount}</span>
                 </div>
@@ -230,8 +254,8 @@ const MyPostDetail = ({ Poste }) => {
             <div className="bg-white p-2.5 rounded-lg shadow-sm">
                 <div className="flex justify-between items-center mb-1">
                     <div className="flex items-center">
-                        <Share2 className="h-4 w-4 text-purple-500 mr-1" />
-                        <span className="text-sm font-medium">Shares</span>
+                        <Share2 className={`h-4 w-4 text-purple-500 ${i18n.language == 'ar' ? 'ml-1' : 'mr-1'} `} />
+                        <span className="text-sm font-medium">{t('post_stats.shares')}</span>
                     </div>
                     <span className="text-sm font-bold">{shareCount}</span>
                 </div>
@@ -243,10 +267,9 @@ const MyPostDetail = ({ Poste }) => {
         </div>
     );
 
-
     const PostContent = () => (
-        <div className="flex-1">
-            <div className="text-base font-medium text-gray-800 ml-1 mb-3">
+        <div className={`flex-1 ${(lang === 'ar' || lang === 'fa') ? 'text-right' : 'text-left'} `} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+            <div className={`text-base font-medium text-gray-800 ml-1 mb-3 `}>
                 {
                     Poste.content &&
                     (
@@ -260,7 +283,7 @@ const MyPostDetail = ({ Poste }) => {
                                             className="ml-1 text-blue-600 hover:text-blue-700 font-medium text-sm"
                                             onClick={() => setSeeMore(!SeeMore)}
                                         >
-                                            Lire la suite
+                                            {t('see_more')}
                                         </button>
                                     </>
                                 )
@@ -273,7 +296,7 @@ const MyPostDetail = ({ Poste }) => {
                                             onClick={() => setSeeMore(!SeeMore)}
                                         >
                                             <ChevronUp className="h-4 w-4 mr-1" />
-                                            Voir moins
+                                            {t('see_less')}
                                         </button>
                                     </>
                                 )
@@ -290,26 +313,17 @@ const MyPostDetail = ({ Poste }) => {
                     />
                 </div>
             )}
-
-            {Poste.tags && Poste.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2 my-3">
-                    {Poste.tags.map((tag) => (
-                        <div
-                            key={tag}
-                            className="inline-flex items-center rounded-full bg-gray-50 hover:bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 cursor-pointer transition-colors"
-                        >
-                            #{tag}
-                        </div>
-                    ))}
-                </div>
-            )}
         </div>
     );
 
     return (
-        <div className="bg-white shadow-sm rounded-xl border border-gray-100 my-4 w-full" onMouseLeave={() => setDropdownOpen(false)}>
+        <div
+            className={`bg-white shadow-sm rounded-xl border border-gray-100 my-4 w-full ${i18n.language === 'ar' ? 'text-right' : 'text-left'}`}
+            onMouseLeave={() => setDropdownOpen(false)}
+            dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}
+        >
             <div className="flex items-center justify-between pt-4 px-4 border-b border-gray-50">
-                <div className="flex items-center space-x-3">
+                <div className={`flex items-center space-x-3 ${i18n.language == 'ar' ? 'space-x-reverse' : null} `}>
                     <div className="relative h-12 w-12 overflow-hidden rounded-full border bg-gray-50">
                         {auth.user.imageSRC ? (
                             <img
@@ -325,11 +339,11 @@ const MyPostDetail = ({ Poste }) => {
                     </div>
                     <div>
                         <p className="text-base font-semibold text-gray-800">
-                            {auth.user.nom} {auth.user.prenom} <span className="text-blue-600 text-xs">(You)</span>
+                            {auth.user.nom} {auth.user.prenom} <span className="text-blue-600 text-xs">({t('you')})</span>
                         </p>
                         <div className="flex items-center text-xs text-gray-500 mt-0.5">
-                            <Calendar className="h-3 w-3 mr-1" />
-                            {formatDistanceToNow(new Date(Poste.created_at), { addSuffix: true })}
+                            <Calendar className={`h-3 w-3 ${i18n.language == 'ar'  ? 'ml-1' : 'mr-1'}`} />
+                            {formatDistanceToNow(new Date(Poste.created_at), { addSuffix: true , locale: i18n.language === 'ar' ? ar :i18n.language ==='en' ?enUS : fr })}
                         </div>
                     </div>
                 </div>
@@ -339,7 +353,7 @@ const MyPostDetail = ({ Poste }) => {
                         className={`inline-flex items-center justify-center px-3 py-1.5 rounded-full ${showStats ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700'} hover:opacity-90 transition-all duration-300 `}
                         onClick={handleStats}
                     >
-                        {showStats ? 'Show Post' : 'View Stats'}
+                        {showStats ? t('post_actions.show_post') : t('post_actions.view_stats')}
                     </button>
 
                     <div className="relative">
@@ -351,21 +365,20 @@ const MyPostDetail = ({ Poste }) => {
                         </button>
 
                         {dropdownOpen && (
-                            <div className="absolute right-0 z-20 mt-2 w-48 rounded-md border border-gray-100 bg-white shadow-lg animate-in fade-in slide-in-from-top-5 duration-200">
+                            <div className={`absolute ${i18n.language === 'ar' ? 'left-0' : 'right-0'} z-20 mt-2 w-48 rounded-md border border-gray-100 bg-white shadow-lg animate-in fade-in slide-in-from-top-5 duration-200`}>
                                 <div className="py-1">
-
                                     <button
                                         className="px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left flex items-center"
                                         onClick={handleDelete}
                                     >
-                                        Delete Post
+                                        {t('delete_post')}
                                     </button>
 
                                     <button
                                         className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 w-full text-left flex items-center"
                                         onClick={() => copyPosteLink(Poste.id)}
                                     >
-                                        Copy link
+                                        {t('copy_link')}
                                     </button>
                                 </div>
                             </div>
@@ -374,16 +387,18 @@ const MyPostDetail = ({ Poste }) => {
                 </div>
             </div>
 
-            <div className={`px-6 py-4 transition-all duration-300 `}>
+            <div className={`px-6 py-4 transition-all duration-300`}>
                 {showStats ? <StatsPanel /> : <PostContent />}
             </div>
 
             <hr className="mx-6" />
 
-            <div className="flex items-center justify-between px-6 py-3">
-                <div className="flex items-center space-x-2">
+            <div className={`flex items-center justify-between px-6 py-3 ${i18n.language == 'ar' ? 'flex-row-reverse' : null} `}>
+                <div className={`flex items-center space-x-2 ${i18n.language == 'ar' ? 'flex-row-reverse' : null} `}>
                     <button
-                        className={`inline-flex items-center justify-center rounded-full p-2 transition-colors ${isLiked ? 'text-red-500 hover:bg-red-50' : 'text-gray-500 hover:bg-gray-50'}`}
+                        className={`
+                            ${i18n.language == 'ar' ? 'flex-row-reverse' : null}
+                            inline-flex items-center justify-center rounded-full p-2 transition-colors ${isLiked ? 'text-red-500 hover:bg-red-50' : 'text-gray-500 hover:bg-gray-50'}`}
                         onClick={handleLike}
                     >
                         <Heart
@@ -393,7 +408,9 @@ const MyPostDetail = ({ Poste }) => {
                     </button>
 
                     <button
-                        className="inline-flex items-center justify-center rounded-full p-2 text-gray-500 hover:bg-gray-50 transition-colors"
+                        className={`
+                            ${i18n.language == 'ar' ? 'flex-row-reverse' : null}
+                            inline-flex items-center justify-center rounded-full p-2 text-gray-500 hover:bg-gray-50 transition-colors`}
                         onClick={() => {
                             setShowComments(!showComments);
                             setShowStats(false);
@@ -406,7 +423,9 @@ const MyPostDetail = ({ Poste }) => {
                     </button>
 
                     <button
-                        className="inline-flex items-center justify-center rounded-full p-2 text-gray-500 hover:bg-gray-50 transition-colors"
+                        className={`
+                            ${i18n.language == 'ar' ? 'flex-row-reverse' : null}
+                            inline-flex items-center justify-center rounded-full p-2 text-gray-500 hover:bg-gray-50 transition-colors`}
                         onClick={() => handleShare(Poste.id)}
                     >
                         <Share2 className="h-5 w-5" />
@@ -415,7 +434,9 @@ const MyPostDetail = ({ Poste }) => {
                 </div>
 
                 <button
-                    className={`inline-flex items-center justify-center rounded-full p-2 transition-colors ${isBookmarked ? 'text-blue-600 hover:bg-blue-50' : 'text-gray-500 hover:bg-gray-50'}`}
+                    className={`
+                        ${i18n.language == 'ar' ? 'flex-row-reverse' : null}
+                        inline-flex items-center justify-center rounded-full p-2 transition-colors ${isBookmarked ? 'text-blue-600 hover:bg-blue-50' : 'text-gray-500 hover:bg-gray-50'}`}
                     onClick={handleBookmark}
                 >
                     <Bookmark
@@ -425,18 +446,18 @@ const MyPostDetail = ({ Poste }) => {
                 </button>
             </div>
 
-            {linkCopied && (
+            {/* {linkCopied && (
                 <div className="bg-gray-800 text-white text-sm py-2 px-4 rounded-md fixed bottom-4 right-4 z-50 animate-in fade-in slide-in-from-bottom-10 duration-200">
-                    Link copied to clipboard!
+                    {t('link_copied')}
                 </div>
-            )}
+            )} */}
 
             {showComments && (
                 <div className="overflow-hidden px-6 pb-3">
                     <CommentSection posteId={Poste.id} onGetCommentsCount={(e) => GetCommentsCount(e)} commentCount={commentCount} />
                 </div>
             )}
-            <Toaster position="bottom-right" />
+            <Toaster position={i18n.language === 'ar' ? 'bottom-left' : 'bottom-right'} />
         </div>
     );
 };

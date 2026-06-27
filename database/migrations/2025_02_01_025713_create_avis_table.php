@@ -15,9 +15,9 @@ return new class extends Migration
             $table->id();
             $table->string('avis');
             $table->date('dateAvis');
-            $table->foreignId('laureat_id')->constrained();
-            $table->integer('helpful')->nullable(true);
-            $table->integer('report')->nullable(true);
+            $table->foreignId('user_id')->constrained();
+            $table->integer('helpful')->default(0);
+            $table->integer('report')->default(0);
             $table->timestamps();
         });
     }

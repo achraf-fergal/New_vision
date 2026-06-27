@@ -38,11 +38,11 @@ return [
     'guards' => [
         'web' => [
             'driver' => 'session',
-            'provider' => 'laureats',
+            'provider' => 'users',
         ],
 
 
-        'gestionnaire' => [ // New guard for gestionnaire
+        'gestionnaire' => [
             'driver' => 'session',
             'provider' => 'gestionnaires',
         ],
@@ -67,13 +67,18 @@ return [
     */
 
     'providers' => [
-        'laureats' => [
+        // 'laureats' => [
+        //     'driver' => 'eloquent',
+        //     'model' => App\Models\Laureat::class,
+        // ],
+
+        'users' => [
             'driver' => 'eloquent',
-            'model' => App\Models\Laureat::class,
+            'model' => App\Models\User::class,
         ],
 
 
-        'gestionnaires' => [ // New provider for gestionnaire
+        'gestionnaires' => [
             'driver' => 'eloquent',
             'model' => App\Models\Gestionnaire::class,
         ],
@@ -106,6 +111,13 @@ return [
             'expire' => 60,
             'throttle' => 60,
         ],
+
+        // 'laureats' => [
+        //     'provider' => 'laureats',
+        //     'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
+        //     'expire' => 1,
+        //     'throttle' => 60,
+        // ],
     ],
 
     /*

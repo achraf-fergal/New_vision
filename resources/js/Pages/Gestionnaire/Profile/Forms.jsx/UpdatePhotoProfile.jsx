@@ -10,8 +10,10 @@ import {
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import { useForm } from "@inertiajs/react";
+import { useTranslation } from 'react-i18next';
 
 function PhotoProfile({ Admin }) {
+    const { t } = useTranslation();
     const { data, setData, post, processing, reset } = useForm({
         ...Admin
     });
@@ -32,13 +34,12 @@ function PhotoProfile({ Admin }) {
             {
                 preserveScroll: true,
                 onSuccess: () => {
-                    toast.success("Votre Photo de Profile supprimée avec succès");
+                    toast.success(t('Gestionnaire.profile.photo_delete_success'));
                     setPreviewImage(null);
                 },
             }
         );
     };
-
 
     const handleChangePhoto = (e) => {
         const file = e.target.files[0];
@@ -48,29 +49,25 @@ function PhotoProfile({ Admin }) {
                 setPreviewImage(reader.result);
             };
             reader.readAsDataURL(file);
-
-
             setData({ ...data, imageSRC: file });
         }
     };
 
     const handleSubmitPhoto = async (e) => {
         e.preventDefault();
-
         post(route("gestionnaire.profile.upload"), {
             preserveScroll: true,
             onSuccess: () => {
-                toast.success("Votre Photo de Profile ajoutée avec succès");
+                toast.success(t('Gestionnaire.profile.photo_upload_success'));
                 reset();
             },
             onError: (errors) => {
                 if (errors.imageSRC) {
-                    toast.error("La photo de profile doit être Image au format jpg, jpeg, ou png ");
+                    toast.error(t('Gestionnaire.profile.photo_format_error'));
                 }
             },
         });
     };
-
 
     const handleCancel = () => {
         setPreviewImage(Admin.imageSRC ? `/storage/${Admin.imageSRC}` : null);
@@ -79,14 +76,14 @@ function PhotoProfile({ Admin }) {
 
     return (
         <div className="mb-6 bg-white shadow sm:rounded-lg sm:p-8">
-            <h2 className="text-xl font-semibold mb-4">Photo de profil</h2>
+            <h2 className="text-xl font-semibold mb-4">{t('Gestionnaire.profile.photo_title')}</h2>
             <div className="flex items-end gap-6">
                 <div className="relative">
                     {PreviewImage ? (
                         <img
                             src={PreviewImage}
                             alt={`${Admin.nom} ${Admin.prenom}`}
-                            className="w-32 h-32 rounded-full border-2 border-gray-400"
+                            className="w-32 h-32 rounded-full object-cover border-2 border-gray-400"
                         />
                     ) : (
                         <div className="w-32 h-32 rounded-full border-2 border-gray-400 flex justify-center items-center">
@@ -102,7 +99,7 @@ function PhotoProfile({ Admin }) {
                             className="px-4 py-2 text-sm font-semibold bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
                         >
                             <Save className="h-4 w-4" />
-                            Enregistrer
+                            {t('Gestionnaire.profile.save_button')}
                         </button>
                     )}
 
@@ -113,12 +110,12 @@ function PhotoProfile({ Admin }) {
                         {PreviewImage ? (
                             <>
                                 <Settings2 className="h-4 w-4" />
-                                Changer la photo
+                                {t('Gestionnaire.profile.change_photo')}
                             </>
                         ) : (
                             <>
                                 <ImageUp className="h-4 w-4" />
-                                Upload Photo
+                                {t('Gestionnaire.profile.upload_photo')}
                             </>
                         )}
                         <input
@@ -135,7 +132,7 @@ function PhotoProfile({ Admin }) {
                             className="px-4 py-2 text-sm font-semibold border border-red-600 rounded-lg text-red-600 hover:bg-red-600 hover:text-white flex items-center gap-2"
                         >
                             <X className="h-4 w-4" />
-                            Supprimer
+                            {t('Gestionnaire.profile.delete_button')}
                         </button>
                     )}
 
@@ -145,7 +142,7 @@ function PhotoProfile({ Admin }) {
                             className="px-4 py-2 text-sm font-semibold border border-red-600 rounded-lg text-red-600 hover:bg-red-600 hover:text-white flex items-center gap-2"
                         >
                             <X className="h-4 w-4" />
-                            Annuler
+                            {t('Gestionnaire.profile.cancel_button')}
                         </button>
                     )}
                 </div>

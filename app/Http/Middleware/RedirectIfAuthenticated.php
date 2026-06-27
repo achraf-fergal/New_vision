@@ -15,14 +15,12 @@ class RedirectIfAuthenticated
             if (Auth::guard($guard)->check()) {
                 if ($guard === 'gestionnaire') {
                     return redirect()->route('gestionnaire.dashboard');
-                } elseif ($guard === 'web') {
-                    return redirect('/');
                 }
+
+                return redirect('/');
             }
         }
-        
+
         return $next($request);
     }
 }
-
-

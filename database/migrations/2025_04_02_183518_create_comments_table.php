@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('content');
             $table->foreignId('souvenir_id')->constrained()->onDelete('cascade');
-            $table->foreignId('laureat_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->boolean('edited')->default(false);
             $table->timestamps();
         });
     }

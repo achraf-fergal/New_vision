@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\laureat;
+use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,12 +20,16 @@ class RegisteredUserController extends Controller
     public function create(): Response
     {
         $SessionData = session()->get('request');
+
         if ($SessionData) {
+            // dd($SessionData);
             session()->forget('request.password');
+
             return Inertia::render('Auth/Register', [
                 'InitialData' => $SessionData,
             ]);
         }
+
         return Inertia::render('Auth/Register');
     }
 
@@ -37,18 +41,11 @@ class RegisteredUserController extends Controller
     public function store(Request $request)
     {
         $validatedData = $request->validate([
-            'nom'      => 'required|string|max:255',
-            'prenom'   => 'required|string|max:255',
-            'email'    => 'required|email|max:255',
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'nom' => 'required|string|max:255',
+            'prenom' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email',
+            'password' => ['required', Rules\Password::defaults(), 'confirmed'],
         ]);
-
-
-        $laureat = laureat::where('email', $validatedData['email'])->first();
-        if ($laureat) {
-            return redirect()->back()->withErrors(['ExistsEmail' => 'Email already exists']);
-        }
-
         session()->put('request', $validatedData);
 
         return redirect()->route('FinalRegister');
@@ -63,7 +60,7 @@ class RegisteredUserController extends Controller
 
         if ($initialData && isset($initialData['email']) && isset($initialData['password'])) {
             return Inertia::render('Auth/Register2', [
-                "InitialData" => $initialData,
+                'InitialData' => $initialData,
             ]);
         } else {
             return redirect()->route('register');
@@ -76,33 +73,32 @@ class RegisteredUserController extends Controller
     public function storeFinalRegister(Request $request)
     {
         $request->validate([
-            'telephone'     => [
+            'telephone' => [
                 'required',
                 'string',
-                'regex:/^(0[5-7]\d{8}|212[5-7]\d{8})$/'
+
             ],
-            'promotion'     => 'required|integer|min:1990|max:' . date("Y"),
-            'filiere'       => 'required|string',
+            'promotion' => 'required|integer|min:1990|max:'.date('Y'),
+            'filiere' => 'required|string',
             'etablissement' => 'required|string',
-            'fonction'      => 'nullable|string',
-            'employeur'     => 'nullable|string',
+            'fonction' => 'nullable|string',
+            'employeur' => 'nullable|string',
         ]);
 
-
-
         $initialData = session('request');
-        
-        $laureat = laureat::create([
-            'nom'           => $initialData['nom'],
-            'prenom'        => $initialData['prenom'],
-            'email'         => $initialData['email'],
-            'password'      => Hash::make($initialData['password']),
-            'telephone'     => $request->telephone,
-            'promotion'     => $request->promotion,
-            'filiere'       => $request->filiere,
+
+        $laureat = User::create([
+            'nom' => $initialData['nom'],
+            'prenom' => $initialData['prenom'],
+            'email' => $initialData['email'],
+            'password' => Hash::make($initialData['password']),
+            'telephone' => $request->telephone,
+            'promotion' => $request->promotion,
+            'filiere' => $request->filiere,
             'etablissement' => $request->etablissement,
-            'fonction'      => $request->fonction,
-            'employeur'     => $request->employeur,
+            'fonction' => $request->fonction,
+            'employeur' => $request->employeur,
+            'valide' => true,
         ]);
 
         // event(new Registered($laureat));

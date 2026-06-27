@@ -1,111 +1,107 @@
 import { Link, useForm, usePage } from "@inertiajs/react";
 import axios from "axios";
-import { Book, Edit, Edit2, MessageSquare, User, Users } from "lucide-react";
+import { Book, Bookmark, Edit2, Heart, MessageSquare, Users } from "lucide-react";
 import React, { useEffect } from "react";
-
+import { useTranslation } from "react-i18next";
 
 const UserInfoCard = ({ User, isScrolled }) => {
-    const { Laureat_Activity } = usePage().props;
-    const { Comments_Count } = usePage().props;
-    const { Poste } = usePage().props;
-    const { data, setData, processing, post, errors } = useForm({
+    const { t, i18n } = useTranslation();
+    const isRTL = i18n.language === 'ar';
+    const { Laureat_Activity, Comments_Count, Poste } = usePage().props;
+
+    const { data, setData } = useForm({
         ...User,
         posts: 0,
-        followers: 0,
-        following: 0,
+        CountLikedPostes: 0,
+        CountSavedPostes: 0,
         comments: 0
-    })
+    });
 
     const GetStatistiqueLaureat = async () => {
-        const response = await axios.post(`/laureat/statistique/${User.id}`);
+        await axios.post(`/laureat/statistique/${User.id}`);
         setData('comments', Comments_Count);
-        setData('posts', Laureat_Activity[0].MyPostes_Count || 0);
-        // console.log(response)
-    }
+        setData('posts', Laureat_Activity[0]?.MyPostes_Count || 0);
+        setData('CountLikedPostes', Laureat_Activity[0]?.Count_LikedPoste || 0);
+        setData('CountSavedPostes', Laureat_Activity[0]?.Count_SavedPoste || 0);
+    };
 
     useEffect(() => {
         GetStatistiqueLaureat();
-    }, [Poste, Laureat_Activity, Comments_Count])
+    }, [Poste, Laureat_Activity, Comments_Count]);
 
-
-    // console.log(Comments_Count)
+    const stats = [
+        { icon: <Book size={16} />, label: t('publications'), value: data.posts },
+        { icon: <Heart size={16} />, label: t('liked_posts'), value: data.CountLikedPostes },
+        { icon: <Bookmark size={16} />, label: t('bookmarks'), value: data.CountSavedPostes },
+        { icon: <MessageSquare size={16} />, label: t('comments'), value: data.comments }
+    ];
 
     return (
-        <div className={`w-[400px] border border-gray-200 rounded-lg shadow-lg bg-white transition-all duration-300 ${isScrolled ? 'fixed top-20 ' : 'relative'}`}>
-            <div className="p-6 pb-2 flex flex-row items-center justify-between space-y-0">
-                <div className="flex items-center space-x-2">
-                    <div className="relative flex h-12 w-12 shrink-0 overflow-hidden rounded-full border">
+        <div
+            className={`w-full max-w-sm border border-gray-100 rounded-xl shadow-sm bg-white transition-all duration-300 ${isScrolled ? 'fixed top-20' : 'relative'} overflow-hidden ${isRTL ? 'rtl' : ''}`}
+            dir={isRTL ? 'rtl' : 'ltr'}
+        >
+            <div className="p-6 pb-4">
+                <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-4`}>
+                    <div className="relative">
                         {data.imageSRC ? (
                             <img
                                 src={'storage/' + data.imageSRC}
-                                alt={data.nom}
-                                className="aspect-square h-full w-full"
+                                alt={`${data.nom} ${data.prenom}`}
+                                className="w-14 h-14 rounded-full object-cover border-2 border-white shadow-sm"
                             />
                         ) : (
-                            <div className="flex h-full w-full items-center text-xl font-bold justify-center rounded-full bg-blue-500 text-white">
+                            <div className="flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white font-bold text-xl shadow-sm">
                                 {data.nom.charAt(0)}{data.prenom.charAt(0)}
                             </div>
                         )}
                     </div>
-                    <div>
-                        <h3 className="text-lg font-bold leading-none">{data.nom} {data.prenom}</h3>
-                        <p className="text-sm text-gray-500">{data.fonction}</p>
+                    <div className={`${isRTL ? 'text-right' : 'text-left'}`}>
+                        <h3 className={`text-lg font-semibold text-gray-900 ${isRTL ? 'ml-4' : null}`}>{data.nom} {data.prenom}</h3>
+                        <p className={`text-sm text-gray-500 ${isRTL ? 'ml-4' : null} `}>{data.fonction}</p>
                     </div>
                 </div>
             </div>
 
-            <div className="p-6 pt-4">
-                <p className="text-sm text-center mb-6">{data.bio}</p>
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="flex flex-col items-center p-2 rounded-md bg-gray-100">
-                        <div className="flex items-center gap-1 text-sm text-gray-500 mb-1">
-                            <Book width={16} height={16} />
-                            <span>Publications</span>
-                        </div>
-                        <span className="font-bold">{data.posts}</span>
-                    </div>
-
-                    <div className="flex flex-col items-center p-2 rounded-md bg-gray-100">
-                        <div className="flex items-center gap-1 text-sm text-gray-500 mb-1">
-                            <Users width={16} height={16} />
-                            <span>Followers</span>
-                        </div>
-                        <span className="font-bold">{data.followers}</span>
-                    </div>
-
-                    <div className="flex flex-col items-center p-2 rounded-md bg-gray-100">
-                        <div className="flex items-center gap-1 text-sm text-gray-500 mb-1">
-                            <Users width={16} height={16} />
-                            <span>Following</span>
-                        </div>
-                        <span className="font-bold">{data.following}</span>
-                    </div>
-
-                    <div className="flex flex-col items-center p-2 rounded-md bg-gray-100">
-                        <div className="flex items-center gap-1 text-sm text-gray-500 mb-1">
-                            <MessageSquare width={16} height={16} />
-                            <span>Comments</span>
-                        </div>
-                        <span className="font-bold">{data.comments}</span>
-                    </div>
+            {data.bio && (
+                <div className="px-6 pb-4">
+                    <p className={`text-sm text-gray-600 ${isRTL ? 'text-right' : 'text-center'}`}>{data.bio}</p>
                 </div>
+            )}
 
-                <div className="flex gap-2">
-                    <Link href={route('laureat.profile')}
-                        className="w-full"
-                    >
-                        <button
-                            className="w-full inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors text-white  bg-blue-600 hover:bg-blue-700 h-10 px-4 py-2"
+            <div className="px-6 py-4 border-t border-gray-100">
+                <div className="grid grid-cols-2 gap-3">
+                    {stats.map((stat, index) => (
+                        <div
+                            key={index}
+                            className={`flex flex-col items-center p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors ${isRTL ? 'text-right' : ''}`}
                         >
-                            <Edit2 width={14} height={14} className="mx-2" />
-                            Edit Profile
+                            <div className={`flex items-center gap-2 text-gray-500 mb-1 `}>
+                                {stat.icon}
+                                <span className="text-xs">{stat.label}</span>
+                            </div>
+                            <span className="font-bold text-gray-900">{stat.value}</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            <div className="p-4 border-t border-gray-100 bg-gray-50">
+                <div className={`flex gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <Link
+                        href={route('laureat.profile')}
+                        className="flex-1"
+                    >
+                        <button className={`w-full flex items-center justify-center gap-2 rounded-lg text-sm font-medium transition-colors text-white bg-blue-600 hover:bg-blue-700 h-10 px-4 py-2 shadow-sm `}>
+                            <Edit2 size={14} />
+                            {t('edit_profile')}
                         </button>
                     </Link>
-                    <button
-                        className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors border border-gray-300 bg-white hover:bg-gray-100 h-10 px-4 py-2"
-                    >
-                        Share
-                    </button>
+                    <Link href={route('laureat.postes')}>
+                        <button className={`flex items-center justify-center gap-2 rounded-lg text-sm font-medium transition-colors border border-gray-300 bg-white hover:bg-gray-100 h-10 px-4 py-2 shadow-sm `}>
+                            {t('show_my_posts')}
+                        </button>
+                    </Link>
                 </div>
             </div>
         </div>

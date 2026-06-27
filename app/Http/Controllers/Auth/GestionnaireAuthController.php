@@ -6,9 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Gestionnaire;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
-use Inertia\Inertia;
 
 class GestionnaireAuthController extends Controller
 {
@@ -19,24 +16,31 @@ class GestionnaireAuthController extends Controller
 
     public function login(Request $request)
     {
-        $credentials = $request->validate([
-            'matricule' => 'required|integer',
-            'password' => ['required'],
+        $validated = $request->validate([
+            'login' => 'required|string',
+            'password' => 'required|string',
         ]);
 
-        $Admin = Gestionnaire::where('matricule', $credentials['matricule'])->first();
+        $identifier = $validated['login'];
+        $password = $validated['password'];
 
+        $loginField = filter_var($identifier, FILTER_VALIDATE_EMAIL) ? 'email' : 'matricule';
 
-        if (!$Admin) {
-            return back()->withErrors(['ExistsAdmin' => 'Matricule non trouvé']);
-        } else if (Auth::guard('gestionnaire')->attempt($credentials)) {
-            Auth::guard('web')->logout();
+        $credentials = [
+            $loginField => $identifier,
+            'password' => $password,
+        ];
+
+        if (Auth::guard('gestionnaire')->attempt($credentials)) {
+            // ❌ احذف: Auth::guard('web')->logout();
             $request->session()->regenerate();
-            return redirect()->route('gestionnaire.dashboard');
-        } else {
-            return back()->withErrors(['password' => 'Mot de passe incorrect']);
-        };
 
+            return redirect()->route('gestionnaire.dashboard');
+        }
+
+        return back()->withErrors([
+            'login' => 'Email/Matricule ou mot de passe incorrect',
+        ]);
     }
 
     public function logout(Request $request)
@@ -44,7 +48,8 @@ class GestionnaireAuthController extends Controller
         Auth::guard('gestionnaire')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect()->route("/");
+
+        return redirect()->route('/');
     }
 
     public function showRegistrationForm()

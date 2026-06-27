@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Validation\Rules\Password as PsswordRule;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
@@ -34,11 +35,29 @@ class NewPasswordController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        // dd($request->all());
+        // $request->validate([
+        //     'token' => 'required',
+        //     'email' => 'required|email',
+        //     'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        // ]);
+
         $request->validate([
             'token' => 'required',
             'email' => 'required|email',
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'password' => [
+                'required',
+                'confirmed',
+                PsswordRule::min(8)
+                    ->mixedCase()
+                    ->letters()
+                    ->numbers()
+                    ->symbols()
+                    ->uncompromised(), // hadi kayakhod dak mot passe w kayhashih w kaysift 7ruf lewl amen password hash w kaycheckeh wash kayn m3a des password pirate 
+            ],
         ]);
+
+
 
         // Here we will attempt to reset the user's password. If it is successful we
         // will update the password on an actual user model and persist it to the

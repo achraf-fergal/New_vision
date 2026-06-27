@@ -2,8 +2,11 @@
 
 namespace App\Http\Middleware;
 
+use Closure;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Session;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -22,6 +25,7 @@ class HandleInertiaRequests extends Middleware
         return parent::version($request);
     }
 
+
     /**
      * Define the props that are shared by default.
      *
@@ -34,6 +38,16 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'locale' => app()->getLocale(),
         ];
+    }
+
+    public function handle($request, Closure $next)
+    {
+        if (Session::has('locale')) {
+            App::setLocale(Session::get('locale'));
+        }
+
+        return parent::handle($request, $next);
     }
 }
